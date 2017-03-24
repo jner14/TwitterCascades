@@ -1,4 +1,4 @@
-Python 3.5 64bit
+Developed with Python 3.5 64bit
 
 Required Packages:
 - pandas

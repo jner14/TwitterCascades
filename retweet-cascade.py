@@ -36,7 +36,7 @@ if __name__ == "__main__":
     # Save original message in new column
     df['FirstTweet'] = df.bodyText.apply(lambda x: re.sub("RT @[^:]*: ", "", x))
 
-    # Sort first by FirstTweet and then by Retweet
+    # Sort first by FirstTweet and then by Re-tweet
     df.sort_values(['FirstTweet', 'publicationTime'], inplace=True)
 
     # Add an id field
@@ -62,7 +62,11 @@ if __name__ == "__main__":
     # df.loc[(df.Size > 0), "Root"] = grouped.Root.values
     df.loc[(df.Root == ""), "Root"] = df.loc[(df.Root == ""), "author"]
 
-    # Save Data to file
-    df.loc[msk, ["CascadeID", "Size", "Root", "bodyText"]].to_csv(p_args.fileOUT, index=False)
+    # Get start time and end time
+    df.loc[msk, "StartTime"] = df.groupby('CascadeID', sort=False).first().publicationTime.values
+    df.loc[msk, "EndTime"] = df.groupby('CascadeID', sort=False).last().publicationTime.values
+
+    # Save data to file
+    df.loc[msk, ["CascadeID", "Size", "Root", "StartTime", "EndTime", "bodyText"]].to_csv(p_args.fileOUT, index=False)
 
     print("Finished")
