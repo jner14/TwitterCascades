@@ -36,7 +36,7 @@ if __name__ == "__main__":
     # Save original message in new column
     df['FirstTweet'] = df.bodyText.apply(lambda x: re.sub("RT @[^:]*: ", "", x))
 
-    # Sort first by FirstTweet and then by Re-tweet
+    # Sort first by FirstTweet and then by publicationTime
     df.sort_values(['FirstTweet', 'publicationTime'], inplace=True)
 
     # Add an id field
