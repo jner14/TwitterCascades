@@ -39,7 +39,7 @@ if __name__ == "__main__":
     df.author = df.author.apply(lambda x: int(x.replace("id:twitter.com:", "")))
 
     # Determine if it is a re-tweet
-    df.insert(4, 'Retweet', df.bodyText.apply(lambda x: 0 if re.match("RT @[^:]*: ", x) is None else 1))
+    df.insert(0, 'Retweet', df.bodyText.apply(lambda x: 0 if re.match("RT @[^:]*: ", x) is None else 1))
 
     # Get followers
     c_id = 0
@@ -47,6 +47,8 @@ if __name__ == "__main__":
     df['ScreenName'] = ""
     df['CascadeID'] = -1
     df['Size'] = 0
+    df['StartTime'] = ""
+    df['EndTime'] = ""
     followed = []
     allFollowers = []
     i = 0
@@ -56,11 +58,15 @@ if __name__ == "__main__":
             continue
         df.loc[k, "CascadeID"] = c_id
         followed.append(row1.author)
+        df.loc[k, 'Members'] += "{},".format(row1.author)
+        df.loc[k, 'Size'] += 1
+        df.loc[k, 'StartTime'] = row1.publicationTime
+        df.loc[k, 'EndTime'] = row1.publicationTime
         try:
             df.loc[k, "ScreenName"] = api.GetUser(user_id=row1.author).screen_name
         except Exception as e:
             print("{} {}".format(e, row1.author))
-            df.loc[k, "ScreenName"] = "not-found-{}".format(row1.author)
+            df.loc[k, "ScreenName"] = "API ERROR - {}".format(row1.author)
             c_id += 1
             i += 1
             continue
@@ -69,14 +75,23 @@ if __name__ == "__main__":
             # if row2 author is not following or being followed then add to row1 author Members
             if row2.author not in allFollowers and row2.author not in followed and row2.author in rowsFollowers:
                 df.loc[k, 'Members'] += "{},".format(row2.author)
+                df.loc[k, 'bodyText'] += "{} | ".format(row2.bodyText)
+                df.loc[k, 'EndTime'] = row2.publicationTime
                 df.loc[k, 'Size'] += 1
                 allFollowers.append(row2.author)
 
         # Remove last comma
         df.loc[k, 'Members'] = df.loc[k, 'Members'][:-1]
+
         # Save Data to file
-        df.loc[(df.CascadeID > -1), ["CascadeID", "Size", "ScreenName", "bodyText", "Members"]].to_csv(p_args.fileOUT,
-                                                                                                       index=False)
+        df.loc[(df.CascadeID > -1), ["CascadeID",
+                                     "Size",
+                                     "ScreenName",
+                                     "StartTime",
+                                     "EndTime",
+                                     "bodyText",
+                                     "Members"]].to_csv(p_args.fileOUT, index=False)
+
         print("Row={}, CascadeID={}".format(i, c_id))
         c_id += 1
         i += 1
