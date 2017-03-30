@@ -2,6 +2,7 @@ import pandas as pd
 import argparse
 import re
 import numpy as np
+import sys
 
 
 if __name__ == "__main__":
@@ -13,15 +14,18 @@ if __name__ == "__main__":
     p_args = parser.parse_args()
 
     # Load dataset into a DataFrame
-    df = pd.DataFrame()
+    df = None
     try:
+        print("Attempting to load %s" % p_args.fileIN)
         df = pd.read_csv(p_args.fileIN, index_col=0, parse_dates=["publicationTime"])
     except Exception as e:
         print(e)
-        exit()
+        sys.exit()
+
+    assert df is not None, "Failed to load input file %s" % p_args.fileIN
 
     # Remove links from bodyText
-    df.bodyText = df.bodyText.apply(lambda x: re.sub("[^A-Za-z]http.*", "", x))
+    df.bodyText = df.bodyText.apply(lambda x: re.sub("[^A-Za-z]http.*", "", str(x)))
 
     # Replace newlines with period-space
     df.bodyText = df.bodyText.apply(lambda x: x.replace("\n", ". "))
